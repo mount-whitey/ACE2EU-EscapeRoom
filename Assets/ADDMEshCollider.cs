@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ADDMEshCollider : MonoBehaviour
+public class AddMeshCollider : MonoBehaviour
 {
 #if UNITY_EDITOR
     private void OnValidate() {

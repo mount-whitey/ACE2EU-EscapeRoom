@@ -76,6 +76,7 @@ public class PlayerController: MonoBehaviour {
     }
 
     void ProcessLook() {
+
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
@@ -242,9 +243,10 @@ public class PlayerController: MonoBehaviour {
             // Apply movement
             MoveCharacter(normalizedDelta);
 
-            leftStickHandle.gameObject.SetActive(true);
-            //leftStickBase.position = leftTouchStartPos;
-            leftStickHandle.position = leftTouchStartPos + (delta * maxTouchDistance);
+            if (Vector2.Distance(touch.position, leftTouchStartPos) > maxTouchDistance) {
+                leftStickHandle.gameObject.SetActive(true);
+                leftStickHandle.position = /*leftTouchStartPos + (delta * maxTouchDistance)*/ touch.position;
+            }
         } else {
             leftStickHandle.gameObject.SetActive(false);
         }
@@ -260,30 +262,35 @@ public class PlayerController: MonoBehaviour {
             // Apply camera rotation
             RotateCamera(normalizedDelta);
 
-            rightStickHandle.gameObject.SetActive(true);
-            //rightStickBase.position = leftTouchStartPos;
-            rightStickHandle.position = leftTouchStartPos + (delta * maxTouchDistance);
+            if(Vector2.Distance(touch.position, rightTouchStartPos) > maxTouchDistance){
+                rightStickHandle.gameObject.SetActive(true);
+                rightStickHandle.position = /*leftTouchStartPos + (delta * maxTouchDistance)*/ touch.position;
+            } 
         } else {
             rightStickHandle.gameObject.SetActive(false);
         }
     }
 
     void RotateCamera(Vector2 input) {
+
         // Horizontal rotation (Y-axis)
         transform.Rotate(0, input.x * mouseSensitivity, 0);
 
-        // For vertical rotation, you might want to rotate the camera separately
-        Camera mainCamera = Camera.main;
-        if (mainCamera != null) {
             // Adjust camera pitch (X-axis rotation)
-            float currentPitch = mainCamera.transform.localEulerAngles.x;
+            float currentPitch = camera.localEulerAngles.x;
+
             float newPitch = currentPitch - input.y * mouseSensitivity;
 
             // Clamp vertical look to prevent over-rotation
-            newPitch = Mathf.Clamp(newPitch, -80f, 80f);
+            //newPitch = Mathf.Clamp(newPitch, -80f, 80f);
 
-            mainCamera.transform.localEulerAngles = new Vector3(newPitch, 0, 0);
-        }
+            //camera.localEulerAngles = new Vector3(newPitch, 0, 0);
+
+
+        xRotation -= /*camera.localEulerAngles.x - */ input.y * mouseSensitivity;
+
+        xRotation = Mathf.Clamp(xRotation, -clampLookY, clampLookY);
+        camera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
     void MoveCharacter(Vector2 input) {
