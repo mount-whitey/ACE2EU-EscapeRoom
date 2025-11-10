@@ -1,14 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
+using ACE2EU;
+
 using UnityEngine;
 
-public class Door : OpenableObject
+public class Door : Openable
 {
 
-    [SerializeField]
-    private bool _isOpenable = false;
-
-    protected override bool Check() {
-        return _isOpenable;
-    }
 }

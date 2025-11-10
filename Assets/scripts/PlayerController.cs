@@ -1,11 +1,18 @@
+
+using System;
+using System.Collections;
+
 using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController: MonoBehaviour {
 
     [Header("References")]
-    [SerializeField] private Transform camera;
+    private Camera _camera;
     [SerializeField] private Transform crouchedCameraTarget;
+    [SerializeField] private Image fade;
+    [SerializeField] private GameObject _pc;
 
     [Header("Movement Settings")]
     [SerializeField] private float walkSpeed = 7f;
@@ -13,6 +20,7 @@ public class PlayerController: MonoBehaviour {
     [SerializeField] private float crouchSpeed = 3f;
     [SerializeField] private float jumpSpeed = 8f;
     [SerializeField] private float gravity = 9.81f;
+    [SerializeField] private float interactDistance = float.PositiveInfinity;
 
     [Header("Look Settings")]
     [SerializeField] private float mouseSensitivity = 1.0f;
@@ -36,14 +44,15 @@ public class PlayerController: MonoBehaviour {
     private float originalHeight;
     private Vector3 originalCameraPos;
 
-    private bool _isMobileDevice = false;
+    private bool _fade;
 
     void Start() {
         controller = GetComponent<CharacterController>();
         controller.center = Vector3.zero;
 
+        _camera = GetComponentInChildren<Camera>(true);
         originalHeight = controller.height;
-        originalCameraPos = camera.localPosition;
+        originalCameraPos = _camera.transform.localPosition;
 
         LockCursor();
 
@@ -53,9 +62,11 @@ public class PlayerController: MonoBehaviour {
 
     void Update() {
 
-        if (_isMobileDevice |= Input.touchCount > 0) {
+        if (Input.touchCount > 0) {
             // Mobile
             HandleTouchInput();
+
+            _pc.SetActive(false);
 
         } else {
             // PC
@@ -70,7 +81,7 @@ public class PlayerController: MonoBehaviour {
             ProcessCrouch();
 
             if (Input.GetMouseButtonDown(0)) {
-                ProcessInteractions();
+                ProcessInteraction(new Ray(_camera.transform.position, _camera.transform.forward));
             }
         }
     }
@@ -84,7 +95,7 @@ public class PlayerController: MonoBehaviour {
 
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -clampLookY, clampLookY);
-        camera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        _camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
     void ProcessMovement() {
@@ -116,7 +127,7 @@ public class PlayerController: MonoBehaviour {
         Vector3 targetCamPos = Input.GetKey(keyCrouch) ? crouchedCameraTarget.localPosition : originalCameraPos;
 
         controller.height = Mathf.Lerp(controller.height, targetHeight, Time.deltaTime * 10f);
-        camera.localPosition = Vector3.Lerp(camera.localPosition, targetCamPos, Time.deltaTime * 10f);
+        _camera.transform.localPosition = Vector3.Lerp(_camera.transform.localPosition, targetCamPos, Time.deltaTime * 10f);
 
         controller.center = new Vector3(0f, -0.28f, 0f);
     }
@@ -138,11 +149,11 @@ public class PlayerController: MonoBehaviour {
         Cursor.visible = false;
     }
 
-    private void ProcessInteractions() {
+    private void ProcessInteraction(Ray ray) {
 
-        if (Physics.Raycast(camera.position, camera.forward, out RaycastHit hit)) {
+        if (Physics.Raycast(ray, out RaycastHit hit, interactDistance)) {
 
-            var interactable = hit.collider.GetComponentInParent<IInteractable>();
+            var interactable = hit.collider.GetComponentInParent<Interactable>();
 
             if (interactable != null) {
                 interactable.Interact();
@@ -197,6 +208,7 @@ public class PlayerController: MonoBehaviour {
             switch (touch.phase) {
                 case TouchPhase.Began:
                     AssignTouchToStick(touch);
+                    CheckTouchInteraction(touch);
                     break;
 
                 case TouchPhase.Moved:
@@ -210,6 +222,10 @@ public class PlayerController: MonoBehaviour {
                     break;
             }
         }
+    }
+
+    private void CheckTouchInteraction(Touch touch) {
+        ProcessInteraction(_camera.ScreenPointToRay(touch.position));
     }
 
     void AssignTouchToStick(Touch touch) {
@@ -277,7 +293,7 @@ public class PlayerController: MonoBehaviour {
         transform.Rotate(0, input.x * mouseSensitivity, 0);
 
             // Adjust camera pitch (X-axis rotation)
-            float currentPitch = camera.localEulerAngles.x;
+            float currentPitch = _camera.transform.localEulerAngles.x;
 
             float newPitch = currentPitch - input.y * mouseSensitivity;
 
@@ -290,7 +306,7 @@ public class PlayerController: MonoBehaviour {
         xRotation -= /*camera.localEulerAngles.x - */ input.y * mouseSensitivity;
 
         xRotation = Mathf.Clamp(xRotation, -clampLookY, clampLookY);
-        camera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        _camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
     void MoveCharacter(Vector2 input) {
@@ -315,5 +331,59 @@ public class PlayerController: MonoBehaviour {
             rightTouchActive = false;
             rightTouchId = -1;
         }
+    }
+
+    private void OnTriggerEnter(Collider other) {
+
+        if (_fade) {
+            return;
+        }
+
+        var portal = other.GetComponentInParent<Portal>();
+
+        if (portal == null) {
+            return;
+        }
+
+        StopAllCoroutines();
+        StartCoroutine(FadeRoutine(true, afterFade: portal.EnterScene));
+    }
+
+    private void OnTriggerExit(Collider other) {
+
+        if (!_fade) {
+            return;
+        }
+
+        StopAllCoroutines();
+        StartCoroutine(FadeRoutine(false));
+    }
+
+    private IEnumerator FadeRoutine(bool fadeOut = true, float duration = 1f, Action afterFade = null) {
+
+        float refTime = Time.realtimeSinceStartup;
+        float curTime = 0;
+
+        if (fadeOut) {
+            Debug.Log("Fade-OUT");
+
+            while (curTime < duration) {
+
+                yield return null;
+
+                fade.color = new Color(0, 0, 0, Mathf.Lerp(0, 1, (curTime = Time.realtimeSinceStartup - refTime) / duration));
+            }
+        } else {
+            Debug.Log("Fade-IN");
+
+            while (curTime < duration) {
+
+                yield return null;
+
+                fade.color = new Color(0, 0, 0, Mathf.Lerp(1, 0, (curTime = Time.realtimeSinceStartup - refTime) / duration));
+            }
+        }
+
+        afterFade?.Invoke();
     }
 }
