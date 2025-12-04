@@ -1,296 +1,370 @@
-
-using System;
+﻿using System;
 using System.Collections;
 
 using UnityEngine;
+
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(CharacterController))]
-public class PlayerController: MonoBehaviour {
+namespace ACE2EU {
 
-    [Header("References")]
-    private Camera _camera;
-    [SerializeField] private Transform crouchedCameraTarget;
-    [SerializeField] private Image fade;
-    [SerializeField] private GameObject _pc;
+    [RequireComponent(typeof(CharacterController))]
+    public class PlayerController: MonoBehaviour {
 
-    [Header("Movement Settings")]
-    [SerializeField] private float walkSpeed = 7f;
-    [SerializeField] private float runSpeed = 12f;
-    [SerializeField] private float crouchSpeed = 3f;
-    [SerializeField] private float jumpSpeed = 8f;
-    [SerializeField] private float gravity = 9.81f;
-    [SerializeField] private float interactDistance = float.PositiveInfinity;
+        public static PlayerController Instance { get; private set; } = null;
 
-    [Header("Look Settings")]
-    [SerializeField] private float mouseSensitivity = 1.0f;
-    [SerializeField] private float clampLookY = 90f;
+        public bool CanMove { get; set; } = true;
 
-    [Header("Key Binds")]
-    [SerializeField] private KeyCode keyRun = KeyCode.LeftShift;
-    [SerializeField] private KeyCode keyJump = KeyCode.Space;
-    [SerializeField] private KeyCode keyCrouch = KeyCode.LeftControl;
+        [Header("References")]
+        private Camera _camera;
+        [SerializeField] private Transform crouchedCameraTarget;
+        [SerializeField] private Image fade;
+        [SerializeField] private GameObject _pc;
 
-    [Header("Crouch Settings")]
-    [SerializeField] private float crouchedHeight = 1f;
+        [Header("Movement Settings")]
+        [SerializeField] private float walkSpeed = 7f;
+        [SerializeField] private float runSpeed = 12f;
+        [SerializeField] private float crouchSpeed = 3f;
+        [SerializeField] private float jumpSpeed = 8f;
+        [SerializeField] private float gravity = 9.81f;
+        [SerializeField] private float interactDistance = float.PositiveInfinity;
 
-    [Header("Debug/Testing")]
-    [SerializeField] private KeyCode toggleMouseLockKey = KeyCode.Escape;
+        [Header("Look Settings")]
+        [SerializeField] private float mouseSensitivity = 1.0f;
+        [SerializeField] private float clampLookY = 90f;
 
-    private CharacterController controller;
-    private float xRotation = 0f;
-    private Vector3 moveDirection = Vector3.zero;
+        [Header("Key Binds")]
+        [SerializeField] private KeyCode keyRun = KeyCode.LeftShift;
+        [SerializeField] private KeyCode keyJump = KeyCode.Space;
+        [SerializeField] private KeyCode keyCrouch = KeyCode.LeftControl;
 
-    private float originalHeight;
-    private Vector3 originalCameraPos;
+        [Header("Crouch Settings")]
+        [SerializeField] private float crouchedHeight = 1f;
 
-    private bool _fade;
+        [Header("Debug/Testing")]
+        [SerializeField] private KeyCode toggleMouseLockKey = KeyCode.Escape;
 
-    void Start() {
-        controller = GetComponent<CharacterController>();
-        controller.center = Vector3.zero;
+        private CharacterController _physic;
+        private float xRotation = 0f;
+        private Vector3 moveDirection = Vector3.zero;
 
-        _camera = GetComponentInChildren<Camera>(true);
-        originalHeight = controller.height;
-        originalCameraPos = _camera.transform.localPosition;
+        private float originalHeight;
+        private Vector3 originalCameraPos;
 
-        LockCursor();
+        private bool _fade;
 
-        leftStickHandle.gameObject.SetActive(false);
-        rightStickHandle.gameObject.SetActive(false);
-    }
+        private TextBubble _textBubble;
+        private Action _afterShowed;
 
-    void Update() {
-
-        if (Input.touchCount > 0) {
-            // Mobile
-            HandleTouchInput();
-
-            _pc.SetActive(false);
-
-        } else {
-            // PC
-
-            ToggleMouseLock();
-
-            if (Cursor.lockState == CursorLockMode.Locked) {
-                ProcessLook();
-            }
-
-            ProcessMovement();
-            ProcessCrouch();
-
-            if (Input.GetMouseButtonDown(0)) {
-                ProcessInteraction(new Ray(_camera.transform.position, _camera.transform.forward));
-            }
+        private void Awake() {
+            Instance = this;
         }
-    }
 
-    void ProcessLook() {
+        void Start() {
 
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+            _textBubble = GetComponentInChildren<TextBubble>(true);
 
-        transform.Rotate(Vector3.up * mouseX);
+            _physic = GetComponentInChildren<CharacterController>(true);
+            _physic.center = Vector3.zero;
 
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -clampLookY, clampLookY);
-        _camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-    }
+            _camera = GetComponentInChildren<Camera>(true);
+            originalHeight = _physic.height;
+            originalCameraPos = _camera.transform.localPosition;
 
-    void ProcessMovement() {
+            LockCursor();
 
-        if (controller.isGrounded) {
-            float verticalInput = Input.GetAxis("Vertical");
-            float horizontalInput = Input.GetAxis("Horizontal");
+            leftStickHandle.gameObject.SetActive(false);
+            rightStickHandle.gameObject.SetActive(false);
 
-            Vector3 input = new(horizontalInput, 0f, verticalInput);
-            Vector3 move = transform.TransformDirection(input.normalized);
+            // Initial
+            switch (SceneManager.GetActiveScene().name) {
+                case "SCHOOL":
+                    if (StorageManager.Instance.FirstEncounter) {
+                        StorageManager.Instance.FirstEncounter = false;
+                        ShowHeader(prePart: "Welcome to the ACE²-EU:", mainLeft: "<font-weight=\"900\">Escape", mainRight: "<font-weight=\"900\">Room", postPart: "Experience our Alliance universities in an\ninteractive, playful way - <font-weight=\"700\">let’s begin!");
+                    } else {
+                        ShowHeader(mainLeft: "<font-weight=\"900\">Welcome back!", mainRight: "We hope you had a great time\nexploring our escape room.");
+                    }
 
-            float speed = walkSpeed;
-            if (Input.GetKey(keyCrouch)) speed = crouchSpeed;
-            else if (Input.GetKey(keyRun)) speed = runSpeed;
+                    transform.SetPositionAndRotation(StorageManager.Instance.InitialPose.position, StorageManager.Instance.InitialPose.rotation);
 
-            moveDirection = move * speed;
-
-            if (Input.GetKeyDown(keyJump) && !Input.GetKey(keyCrouch)) {
-                moveDirection.y = jumpSpeed;
+                    break;
+                case "THI":
+                    ShowHeader(mainLeft: "<font-weight=\"900\">Germany", mainRight: "Technische Hochschule\nIngolstadt - THI");
+                    break;
+                case "MUG":
+                    ShowHeader(mainLeft: "<font-weight=\"900\">Poland", mainRight: "Medical University\nof Gdańsk - MUG");
+                    break;
+                case "CUAS":
+                    ShowHeader(mainLeft: "<font-weight=\"900\">Austria", mainRight: "Carinthia University of\nApplied Sciences - CUAS");
+                    break;
             }
         }
 
-        moveDirection.y -= gravity * Time.deltaTime;
-        controller.Move(moveDirection * Time.deltaTime);
-    }
+        void Update() {
 
-    void ProcessCrouch() {
-        float targetHeight = Input.GetKey(keyCrouch) ? crouchedHeight : originalHeight;
-        Vector3 targetCamPos = Input.GetKey(keyCrouch) ? crouchedCameraTarget.localPosition : originalCameraPos;
+            if (Input.touchCount > 0) {
+                // Mobile
+                HandleTouchInput();
 
-        controller.height = Mathf.Lerp(controller.height, targetHeight, Time.deltaTime * 10f);
-        _camera.transform.localPosition = Vector3.Lerp(_camera.transform.localPosition, targetCamPos, Time.deltaTime * 10f);
+                _pc.SetActive(false);
 
-        controller.center = new Vector3(0f, -0.28f, 0f);
-    }
-
-    // === Toggle Mouse Lock for Testing ===
-    private void ToggleMouseLock() {
-        if (Input.GetKeyDown(toggleMouseLockKey)) {
-            if (Cursor.lockState == CursorLockMode.Locked) {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
             } else {
-                LockCursor();
+                // PC
+
+                ToggleMouseLock();
+
+                if (Cursor.lockState == CursorLockMode.Locked) {
+                    ProcessLook();
+                }
+
+
+                if (CanMove) {
+                    ProcessMovement();
+                }
+
+                ProcessCrouch();
+
+                if (Input.GetMouseButtonDown(0)) {
+                    ProcessInteraction(new Ray(_camera.transform.position, _camera.transform.forward));
+                }
+            }
+
+            if (_justForward) {
+
+                moveDirection = transform.TransformDirection(new(0, 0, 1)) * walkSpeed * 2f;
+                moveDirection.y -= gravity * Time.deltaTime;
+
+                _physic.Move(moveDirection * Time.deltaTime);
             }
         }
-    }
 
-    private void LockCursor() {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
+        void ProcessLook() {
 
-    private void ProcessInteraction(Ray ray) {
+            float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+            float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
-        if (Physics.Raycast(ray, out RaycastHit hit, interactDistance)) {
+            transform.Rotate(Vector3.up * mouseX);
 
-            var interactable = hit.collider.GetComponentInParent<Interactable>();
+            xRotation -= mouseY;
+            xRotation = Mathf.Clamp(xRotation, -clampLookY, clampLookY);
+            _camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        }
 
-            if (interactable != null) {
-                interactable.Interact();
+        void ProcessMovement() {
+
+            if (_physic.isGrounded) {
+                float verticalInput = Input.GetAxis("Vertical");
+                float horizontalInput = Input.GetAxis("Horizontal");
+
+                Vector3 input = new(horizontalInput, 0f, verticalInput);
+                Vector3 move = transform.TransformDirection(input.normalized);
+
+                float speed = walkSpeed;
+                if (Input.GetKey(keyCrouch)) speed = crouchSpeed;
+                else if (Input.GetKey(keyRun)) speed = runSpeed;
+
+                moveDirection = move * speed;
+
+                if (Input.GetKeyDown(keyJump) && !Input.GetKey(keyCrouch)) {
+                    moveDirection.y = jumpSpeed;
+                }
+            }
+
+            moveDirection.y -= gravity * Time.deltaTime;
+            _physic.Move(moveDirection * Time.deltaTime);
+        }
+
+        void ProcessCrouch() {
+            float targetHeight = Input.GetKey(keyCrouch) ? crouchedHeight : originalHeight;
+            Vector3 targetCamPos = Input.GetKey(keyCrouch) ? crouchedCameraTarget.localPosition : originalCameraPos;
+
+            _physic.height = Mathf.Lerp(_physic.height, targetHeight, Time.deltaTime * 10f);
+            _camera.transform.localPosition = Vector3.Lerp(_camera.transform.localPosition, targetCamPos, Time.deltaTime * 10f);
+
+            _physic.center = new Vector3(0f, -0.28f, 0f);
+        }
+
+        // === Toggle Mouse Lock for Testing ===
+        private void ToggleMouseLock() {
+            if (Input.GetKeyDown(toggleMouseLockKey)) {
+                if (Cursor.lockState == CursorLockMode.Locked) {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                } else {
+                    LockCursor();
+                }
             }
         }
-    }
 
-    [Header("UI-Elements")]
-    [SerializeField]
-    private RectTransform leftStickBase;
-    [SerializeField]
-    private RectTransform leftStickHandle;
-    [SerializeField]
-    private RectTransform rightStickBase;
-    [SerializeField]
-    private RectTransform rightStickHandle;
-
-
-    [Header("Movement Settings")]
-    [SerializeField]
-    private float maxTouchDistance = 200f; // Max distance from touch start for full input
-
-    private Vector2 leftTouchStartPos;
-    private Vector2 rightTouchStartPos;
-
-    private int leftTouchId = -1;
-    private int rightTouchId = -1;
-
-    private bool leftTouchActive = false;
-    private bool rightTouchActive = false;
-
-    void HandleTouchInput() {
-
-
-        // Reset tracking at start of frame
-        if (Input.touchCount == 0) {
-
-            leftTouchActive = false;
-            rightTouchActive = false;
-
-            leftTouchId = -1;
-            rightTouchId = -1;
-
-            leftStickHandle.gameObject.SetActive(false);
-            rightStickHandle.gameObject.SetActive(false);
+        private void LockCursor() {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
 
-        // Process all current touches
-        for (int i = 0; i < Input.touchCount; i++) {
-            Touch touch = Input.GetTouch(i);
+        private void ProcessInteraction(Ray ray) {
 
-            switch (touch.phase) {
-                case TouchPhase.Began:
-                    AssignTouchToStick(touch);
-                    CheckTouchInteraction(touch);
-                    break;
+            if (_bubbleActive) {
+                CanMove = true;
+                _textBubble.gameObject.SetActive(_bubbleActive = false);
+                _afterShowed?.Invoke();
+                return;
+            }
 
-                case TouchPhase.Moved:
-                case TouchPhase.Stationary:
-                    ProcessActiveTouch(touch);
-                    break;
+            if (Physics.Raycast(ray, out RaycastHit hit, interactDistance)) {
 
-                case TouchPhase.Ended:
-                case TouchPhase.Canceled:
-                    ReleaseTouch(touch);
-                    break;
+                var interactables = hit.collider.GetComponentsInParent<Interactable>();
+
+                if(interactables == null) {
+                    return;
+                }
+
+                GameObject go = null;
+
+                foreach(var interactable in interactables){
+                    if(go == null) {
+                        go = interactable.gameObject;
+                    } else if(go != interactable.gameObject) {
+                        continue;
+                    }
+
+                    interactable.Interact();
+                }
             }
         }
-    }
 
-    private void CheckTouchInteraction(Touch touch) {
-        ProcessInteraction(_camera.ScreenPointToRay(touch.position));
-    }
-
-    void AssignTouchToStick(Touch touch) {
-
-        // Determine if touch is on left or right side of screen
-        bool isLeftSide = touch.position.x < Screen.width / 2;
-
-        if (isLeftSide && !leftTouchActive) {
-            leftTouchId = touch.fingerId;
-            leftTouchStartPos = touch.position;
-            leftTouchActive = true;
-
-        } else if (!isLeftSide && !rightTouchActive) {
-            rightTouchId = touch.fingerId;
-            rightTouchStartPos = touch.position;
-            rightTouchActive = true;
-        }
-    }
+        [Header("UI-Elements")]
+        [SerializeField]
+        private RectTransform leftStickBase;
+        [SerializeField]
+        private RectTransform leftStickHandle;
+        [SerializeField]
+        private RectTransform rightStickBase;
+        [SerializeField]
+        private RectTransform rightStickHandle;
 
 
-    void ProcessActiveTouch(Touch touch) {
+        [Header("Movement Settings")]
+        [SerializeField]
+        private float maxTouchDistance = 200f; // Max distance from touch start for full input
 
-        // Left stick - Movement
-        if (leftTouchActive && touch.fingerId == leftTouchId) {
-            Vector2 delta = touch.position - leftTouchStartPos;
-            Vector2 normalizedDelta = delta / maxTouchDistance;
+        private Vector2 leftTouchStartPos;
+        private Vector2 rightTouchStartPos;
 
-            // Clamp the input to prevent excessive values
-            normalizedDelta = Vector2.ClampMagnitude(normalizedDelta, 1f);
+        private int leftTouchId = -1;
+        private int rightTouchId = -1;
 
-            // Apply movement
-            MoveCharacter(normalizedDelta);
+        private bool leftTouchActive = false;
+        private bool rightTouchActive = false;
 
-            if (Vector2.Distance(touch.position, leftTouchStartPos) > maxTouchDistance) {
-                leftStickHandle.gameObject.SetActive(true);
-                leftStickHandle.position = /*leftTouchStartPos + (delta * maxTouchDistance)*/ touch.position;
+        void HandleTouchInput() {
+
+
+            // Reset tracking at start of frame
+            if (Input.touchCount == 0) {
+
+                leftTouchActive = false;
+                rightTouchActive = false;
+
+                leftTouchId = -1;
+                rightTouchId = -1;
+
+                leftStickHandle.gameObject.SetActive(false);
+                rightStickHandle.gameObject.SetActive(false);
             }
-        } else {
-            leftStickHandle.gameObject.SetActive(false);
+
+            // Process all current touches
+            for (int i = 0; i < Input.touchCount; i++) {
+                Touch touch = Input.GetTouch(i);
+
+                switch (touch.phase) {
+                    case TouchPhase.Began:
+                        AssignTouchToStick(touch);
+                        CheckTouchInteraction(touch);
+                        break;
+
+                    case TouchPhase.Moved:
+                    case TouchPhase.Stationary:
+                        ProcessActiveTouch(touch);
+                        break;
+
+                    case TouchPhase.Ended:
+                    case TouchPhase.Canceled:
+                        ReleaseTouch(touch);
+                        break;
+                }
+            }
         }
 
-        // Right stick - Camera rotation 
-        if (rightTouchActive && touch.fingerId == rightTouchId) {
-            Vector2 delta = touch.position - rightTouchStartPos;
-            Vector2 normalizedDelta = delta / maxTouchDistance;
-
-            // Clamp the input to prevent excessive values
-            normalizedDelta = Vector2.ClampMagnitude(normalizedDelta, 1f);
-
-            // Apply camera rotation
-            RotateCamera(normalizedDelta);
-
-            if(Vector2.Distance(touch.position, rightTouchStartPos) > maxTouchDistance){
-                rightStickHandle.gameObject.SetActive(true);
-                rightStickHandle.position = /*leftTouchStartPos + (delta * maxTouchDistance)*/ touch.position;
-            } 
-        } else {
-            rightStickHandle.gameObject.SetActive(false);
+        private void CheckTouchInteraction(Touch touch) {
+            ProcessInteraction(_camera.ScreenPointToRay(touch.position));
         }
-    }
 
-    void RotateCamera(Vector2 input) {
+        void AssignTouchToStick(Touch touch) {
 
-        // Horizontal rotation (Y-axis)
-        transform.Rotate(0, input.x * mouseSensitivity, 0);
+            // Determine if touch is on left or right side of screen
+            bool isLeftSide = touch.position.x < Screen.width / 2;
+
+            if (isLeftSide && !leftTouchActive) {
+                leftTouchId = touch.fingerId;
+                leftTouchStartPos = touch.position;
+                leftTouchActive = true;
+
+            } else if (!isLeftSide && !rightTouchActive) {
+                rightTouchId = touch.fingerId;
+                rightTouchStartPos = touch.position;
+                rightTouchActive = true;
+            }
+        }
+
+
+        void ProcessActiveTouch(Touch touch) {
+
+            // Left stick - Movement
+            if (leftTouchActive && touch.fingerId == leftTouchId) {
+                Vector2 delta = touch.position - leftTouchStartPos;
+                Vector2 normalizedDelta = delta / maxTouchDistance;
+
+                // Clamp the input to prevent excessive values
+                normalizedDelta = Vector2.ClampMagnitude(normalizedDelta, 1f);
+
+                // Apply movement
+                if (CanMove) {
+                    MoveCharacter(normalizedDelta);
+                }
+
+                if (Vector2.Distance(touch.position, leftTouchStartPos) > maxTouchDistance) {
+                    leftStickHandle.gameObject.SetActive(true);
+                    leftStickHandle.position = /*leftTouchStartPos + (delta * maxTouchDistance)*/ touch.position;
+                }
+            } else {
+                leftStickHandle.gameObject.SetActive(false);
+            }
+
+            // Right stick - Camera rotation 
+            if (rightTouchActive && touch.fingerId == rightTouchId) {
+                Vector2 delta = touch.position - rightTouchStartPos;
+                Vector2 normalizedDelta = delta / maxTouchDistance;
+
+                // Clamp the input to prevent excessive values
+                normalizedDelta = Vector2.ClampMagnitude(normalizedDelta, 1f);
+
+                // Apply camera rotation
+                RotateCamera(normalizedDelta);
+
+                if (Vector2.Distance(touch.position, rightTouchStartPos) > maxTouchDistance) {
+                    rightStickHandle.gameObject.SetActive(true);
+                    rightStickHandle.position = /*leftTouchStartPos + (delta * maxTouchDistance)*/ touch.position;
+                }
+            } else {
+                rightStickHandle.gameObject.SetActive(false);
+            }
+        }
+
+        void RotateCamera(Vector2 input) {
+
+            // Horizontal rotation (Y-axis)
+            transform.Rotate(0, input.x * mouseSensitivity, 0);
 
             // Adjust camera pitch (X-axis rotation)
             float currentPitch = _camera.transform.localEulerAngles.x;
@@ -303,87 +377,148 @@ public class PlayerController: MonoBehaviour {
             //camera.localEulerAngles = new Vector3(newPitch, 0, 0);
 
 
-        xRotation -= /*camera.localEulerAngles.x - */ input.y * mouseSensitivity;
+            xRotation -= /*camera.localEulerAngles.x - */ input.y * mouseSensitivity;
 
-        xRotation = Mathf.Clamp(xRotation, -clampLookY, clampLookY);
-        _camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-    }
-
-    void MoveCharacter(Vector2 input) {
-
-        // Get camera forward direction without Y component
-        Vector3 cameraForward = Camera.main.transform.forward;
-        cameraForward.y = 0;
-        cameraForward.Normalize();
-
-        // Calculate movement direction relative to camera
-        Vector3 moveDirection = (cameraForward * input.y + Camera.main.transform.right * input.x);
-
-        // Apply movement
-        transform.Translate(moveDirection * walkSpeed * Time.deltaTime, Space.World);
-    }
-
-    void ReleaseTouch(Touch touch) {
-        if (touch.fingerId == leftTouchId) {
-            leftTouchActive = false;
-            leftTouchId = -1;
-        } else if (touch.fingerId == rightTouchId) {
-            rightTouchActive = false;
-            rightTouchId = -1;
-        }
-    }
-
-    private void OnTriggerEnter(Collider other) {
-
-        if (_fade) {
-            return;
+            xRotation = Mathf.Clamp(xRotation, -clampLookY, clampLookY);
+            _camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
         }
 
-        var portal = other.GetComponentInParent<Portal>();
+        void MoveCharacter(Vector2 input) {
 
-        if (portal == null) {
-            return;
+            // Get camera forward direction without Y component
+            Vector3 cameraForward = Camera.main.transform.forward;
+            cameraForward.y = 0;
+            cameraForward.Normalize();
+
+            // Calculate movement direction relative to camera
+            Vector3 moveDirection = (cameraForward * input.y + Camera.main.transform.right * input.x);
+
+            // Apply movement
+            transform.Translate(moveDirection * walkSpeed * Time.deltaTime, Space.World);
         }
 
-        StopAllCoroutines();
-        StartCoroutine(FadeRoutine(true, afterFade: portal.EnterScene));
-    }
-
-    private void OnTriggerExit(Collider other) {
-
-        if (!_fade) {
-            return;
-        }
-
-        StopAllCoroutines();
-        StartCoroutine(FadeRoutine(false));
-    }
-
-    private IEnumerator FadeRoutine(bool fadeOut = true, float duration = 1f, Action afterFade = null) {
-
-        float refTime = Time.realtimeSinceStartup;
-        float curTime = 0;
-
-        if (fadeOut) {
-            Debug.Log("Fade-OUT");
-
-            while (curTime < duration) {
-
-                yield return null;
-
-                fade.color = new Color(0, 0, 0, Mathf.Lerp(0, 1, (curTime = Time.realtimeSinceStartup - refTime) / duration));
-            }
-        } else {
-            Debug.Log("Fade-IN");
-
-            while (curTime < duration) {
-
-                yield return null;
-
-                fade.color = new Color(0, 0, 0, Mathf.Lerp(1, 0, (curTime = Time.realtimeSinceStartup - refTime) / duration));
+        void ReleaseTouch(Touch touch) {
+            if (touch.fingerId == leftTouchId) {
+                leftTouchActive = false;
+                leftTouchId = -1;
+            } else if (touch.fingerId == rightTouchId) {
+                rightTouchActive = false;
+                rightTouchId = -1;
             }
         }
 
-        afterFade?.Invoke();
+        private void OnTriggerEnter(Collider other) {
+
+            if (_fade) {
+                return;
+            }
+
+            var interactable = other.GetComponentInParent<Interactable>();
+
+            if (interactable == null) {
+                return;
+            }
+
+            StopAllCoroutines();
+
+            if (interactable is Portal) {
+
+                float delay = (interactable as Portal).Delay;
+
+                if (delay > 0) {
+                    interactable.Interact();
+                }
+
+                StartCoroutine(FadeRoutine(delay: delay, afterFade: interactable.Interact));
+            } else {
+                interactable.Interact();
+            }
+        }
+
+        //private void OnTriggerExit(Collider other) {
+
+        //    if (!_fade) {
+        //        return;
+        //    }
+
+        //    StopAllCoroutines();
+        //    StartCoroutine(FadeRoutine(false));
+        //}
+
+        private IEnumerator FadeRoutine(bool fadeOut = true, float duration = 1f, float delay = 0f, Action afterFade = null) {
+
+            // Delay
+            if (delay > 0) {
+                yield return new WaitForSeconds(delay);
+            }
+
+            // Transition
+            float refTime = Time.realtimeSinceStartup;
+            float curTime = 0;
+
+            if (fadeOut) {
+                Debug.Log("Fade-OUT");
+
+                while (curTime < duration) {
+
+                    yield return null;
+
+                    fade.color = new Color(0, 0, 0, Mathf.Lerp(0, 1, (curTime = Time.realtimeSinceStartup - refTime) / duration));
+                }
+            } else {
+                Debug.Log("Fade-IN");
+
+                while (curTime < duration) {
+
+                    yield return null;
+
+                    fade.color = new Color(0, 0, 0, Mathf.Lerp(1, 0, (curTime = Time.realtimeSinceStartup - refTime) / duration));
+                }
+            }
+
+            afterFade?.Invoke();
+        }
+
+        public void JustForward(bool state) {
+            _justForward = state;
+            CanMove = !state;
+        }
+        private bool _justForward = false;
+
+        public void ShowInformation(string text, Action afterShowed = null) {
+
+            _textBubble.Style = Style.Message;
+
+            _textBubble.PrePart = "";
+            _textBubble.PostPart = "";
+
+            _textBubble.MainLeft = "";
+            _textBubble.MainMid = "";
+            _textBubble.MainRight = "";
+
+            _textBubble.MainMid = text;
+
+            _textBubble.gameObject.SetActive(_bubbleActive = true);
+
+            _afterShowed = afterShowed;
+            CanMove = false;
+        }
+
+        public void ShowHeader(string mainLeft = "", string mainMid = "", string mainRight = "", string prePart = "", string postPart = "") {
+
+            _textBubble.Style = Style.Header;
+
+            _textBubble.PrePart = prePart;
+            _textBubble.PostPart = postPart;
+
+            _textBubble.MainLeft = mainLeft;
+            _textBubble.MainMid = mainMid;
+            _textBubble.MainRight = mainRight;
+
+            _textBubble.gameObject.SetActive(_bubbleActive = true);
+
+            CanMove = false;
+        }
+        private bool _bubbleActive = false;
     }
 }

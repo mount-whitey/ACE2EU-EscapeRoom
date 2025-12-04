@@ -2,7 +2,7 @@ using ACE2EU;
 
 using UnityEngine;
 
-public class Door : Openable
+public class Door : Animatable
 {
 
 }

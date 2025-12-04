@@ -6,21 +6,15 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SCHOOL.unity
+    path: Assets/Scenes/BASE - SCHOOL/SCHOOL.unity
     guid: b875265322251d74eaf67d46e458890d
   - enabled: 1
-    path: Assets/CUAS - LODGE/CUAS.unity
+    path: Assets/Scenes/CUAS - LODGE/CUAS.unity
     guid: 2f1c9f4e79e703f4dbd0e093cae9cb24
   - enabled: 1
-    path: Assets/MUG - HOSPITAL/MUG.unity
+    path: Assets/Scenes/MUG - HOSPITAL/MUG.unity
     guid: 4140023ce1b1d9340946e9194eff581f
-  - enabled: 0
-    path: Assets/Scenes/Room Germany.unity
-    guid: 8302d347b9a558f44914abed2e87bb4f
-  - enabled: 0
-    path: Assets/Scenes/Room Austria.unity
-    guid: f93b76dfdbb0e74459a7a472c2345248
-  - enabled: 0
-    path: Assets/Scenes/Room Romania.unity
-    guid: e7feb552033e6e0468a5c56948e4e3eb
+  - enabled: 1
+    path: Assets/Scenes/THI - BAVARIAN/THI.unity
+    guid: e5694c0e74d36a84aa010a960b50f5a5
   m_configObjects: {}

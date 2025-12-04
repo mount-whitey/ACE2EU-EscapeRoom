@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3289728318903300725}
-  - component: {fileID: 4318582252635796104}
-  m_Layer: 0
+  - component: {fileID: 1542893787614054157}
+  m_Layer: 3
   m_Name: GARDINES
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34,7 +34,7 @@ Transform:
   - {fileID: 2693588371093753916}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4318582252635796104
+--- !u!114 &1542893787614054157
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43,9 +43,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 331609255753311011}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef63bfbfd5661da45b2a06a7ef6b26fd, type: 3}
+  m_Script: {fileID: 11500000, guid: 007ee4b6c9ba06f4d9766bd67996ac05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Type: -1
+  _allAtOnce: 0
+  _RemoveItem: 1
+  _nothing:
+    m_PersistentCalls:
+      m_Calls: []
+  _progress:
+    m_PersistentCalls:
+      m_Calls: []
+  _finish:
+    m_PersistentCalls:
+      m_Calls: []
+  _positions: []
+  _isOpen: 0
 --- !u!1 &587688863232638169
 GameObject:
   m_ObjectHideFlags: 0
@@ -56,7 +70,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3186434052471933904}
   - component: {fileID: 5927823576911100743}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Gardines
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -110,7 +124,7 @@ GameObject:
   m_Component:
   - component: {fileID: 88211896824187829}
   - component: {fileID: 5001994022645377912}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Gardines
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -166,7 +180,7 @@ GameObject:
   - component: {fileID: 3374819583319576908}
   - component: {fileID: 1295786439859961473}
   - component: {fileID: 6084338259934987097}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -273,7 +287,7 @@ GameObject:
   - component: {fileID: 3065114554418927200}
   - component: {fileID: 5373883562660057051}
   - component: {fileID: 3533775763528538114}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -397,7 +411,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 863998087348111275}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Gardine
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -430,7 +444,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2693588371093753916}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Group394
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -465,7 +479,7 @@ GameObject:
   - component: {fileID: 2921588636373336172}
   - component: {fileID: 6042905371883954457}
   - component: {fileID: 3604542388135236792}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Group394_Color_J0_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
