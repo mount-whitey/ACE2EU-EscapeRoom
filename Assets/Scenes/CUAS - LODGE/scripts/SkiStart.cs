@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -27,7 +26,7 @@ namespace ACE2EU {
 
             if (_started) {
                 return;
-            }else {
+            } else {
                 _started = true;
             }
 
@@ -49,7 +48,14 @@ namespace ACE2EU {
 
             yield return new WaitForSeconds(Delay);
 
-            Teleport();
-        } 
+            PlayerController.Instance.FadeOut(() => {
+
+                foreach (var attachee in _attachees) {
+                    Destroy(attachee.gameObject);
+                }
+
+                Teleport();
+            });
+        }
     }
 }

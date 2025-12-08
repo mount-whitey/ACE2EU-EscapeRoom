@@ -67,5 +67,14 @@ namespace ACE2EU {
 
             return _items.Find(item => item.Object.Type == type).Count;
         }
+
+        public void Clear() {
+
+            while (_items.Count > 0) {
+                var item = _items[0];
+                Destroy(item.gameObject);
+                _items.RemoveAt(0);
+            }
+        }
     }
 }

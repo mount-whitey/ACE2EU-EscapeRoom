@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.Events;
 
 namespace ACE2EU {
 
@@ -7,31 +7,57 @@ namespace ACE2EU {
 
         [Header("Scene of Destination")]
         [SerializeField]
-        private string _scene = "";
+        private Scene _scene = (Scene)(-1);
 
         [Header("Waiting Time")]
         [SerializeField]
         public float Delay = 0;
 
+        [Header("Events")]
+        [SerializeField]
+        public UnityEvent OnPortalIsLoading
+            = null;
+        [SerializeField]
+        public UnityEvent OnPortalIsActive = null;
+
+        private void Start() {
+
+            if ((int)_scene < 0) {
+                return;
+            }
+
+            OverAllManager.Instance.OnSceneGetsLoaded += scene => {
+                if (_scene == scene) {
+                    OnPortalIsActive?.Invoke();
+                }
+            };
+
+            OverAllManager.Instance.OnSceneAvailable += scene => {
+                if (_scene == scene) {
+                    OnPortalIsActive?.Invoke();
+                }
+            };
+
+            if (OverAllManager.Instance.IsSceneAvailable(_scene)) {
+                OnPortalIsActive?.Invoke();
+            } 
+        }
+
         public override void Interact() {
             Teleport();
         }
 
-        protected virtual void Teleport() {
-            if (SceneManager.GetSceneByName(_scene) == null) {
-                Debug.LogError("Scene not available - " + _scene);
-                return;
+        public virtual void Teleport() {
+
+            // NOW
+            OverAllManager.Instance.LoadScene(_scene);
+
+            // NEXT
+            if (_scene != Scene.BASE) {
+                OverAllManager.Instance.InitialPose = new Pose(transform.position + transform.TransformDirection(0, 1f, -2), transform.rotation * Quaternion.Euler(0, 180, 0));
+            } else {
+                OverAllManager.Instance.InitialPose = new Pose(Vector3.zero, Quaternion.identity);
             }
-
-            if (SceneManager.GetActiveScene().name == "SCHOOL") {
-
-                Vector3 port = transform.position;
-                Vector3 diff = transform.TransformDirection(0, 1f, -2);
-
-                StorageManager.Instance.InitialPose = new Pose(port + diff, transform.rotation * Quaternion.Euler(0, 180, 0));
-            }
-
-            SceneManager.LoadSceneAsync(_scene, LoadSceneMode.Single);
         }
     }
 }

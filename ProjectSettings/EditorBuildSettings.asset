@@ -6,15 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/BASE - SCHOOL/SCHOOL.unity
+    path: Assets/Basic/INIT.unity
     guid: b875265322251d74eaf67d46e458890d
-  - enabled: 1
-    path: Assets/Scenes/CUAS - LODGE/CUAS.unity
-    guid: 2f1c9f4e79e703f4dbd0e093cae9cb24
-  - enabled: 1
-    path: Assets/Scenes/MUG - HOSPITAL/MUG.unity
-    guid: 4140023ce1b1d9340946e9194eff581f
-  - enabled: 1
-    path: Assets/Scenes/THI - BAVARIAN/THI.unity
-    guid: e5694c0e74d36a84aa010a960b50f5a5
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 046342e015b977c49b44b22d86fda1d4, type: 2}

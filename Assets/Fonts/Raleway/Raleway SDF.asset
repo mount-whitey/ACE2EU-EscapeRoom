@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: Raleway SDF
   m_EditorClassIdentifier: 
-  hashCode: -47247191
+  hashCode: -47496828
   material: {fileID: 5503985017644531429}
-  materialHashCode: -1207949591
+  materialHashCode: -924373596
   m_Version: 1.1.0
   m_SourceFontFileGUID: 3b740831a195e5d4285d3f9d2060b6b6
   m_SourceFontFile_EditorRef: {fileID: 12800000, guid: 3b740831a195e5d4285d3f9d2060b6b6, type: 3}
@@ -5493,7 +5493,7 @@ Material:
     - _BumpFace: 0
     - _BumpOutline: 0
     - _ColorMask: 15
-    - _CullMode: 0
+    - _CullMode: 2
     - _Diffuse: 0.5
     - _FaceDilate: 0
     - _FaceUVSpeedX: 0

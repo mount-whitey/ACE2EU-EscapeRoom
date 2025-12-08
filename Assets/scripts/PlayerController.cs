@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections;
-
+using System.Drawing.Text;
 using UnityEngine;
 
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace ACE2EU {
@@ -56,6 +55,9 @@ namespace ACE2EU {
         private TextBubble _textBubble;
         private Action _afterShowed;
 
+        [SerializeField]
+        private GameObject _home;
+
         private void Awake() {
             Instance = this;
         }
@@ -75,30 +77,6 @@ namespace ACE2EU {
 
             leftStickHandle.gameObject.SetActive(false);
             rightStickHandle.gameObject.SetActive(false);
-
-            // Initial
-            switch (SceneManager.GetActiveScene().name) {
-                case "SCHOOL":
-                    if (StorageManager.Instance.FirstEncounter) {
-                        StorageManager.Instance.FirstEncounter = false;
-                        ShowHeader(prePart: "Welcome to the ACE²-EU:", mainLeft: "<font-weight=\"900\">Escape", mainRight: "<font-weight=\"900\">Room", postPart: "Experience our Alliance universities in an\ninteractive, playful way - <font-weight=\"700\">let’s begin!");
-                    } else {
-                        ShowHeader(mainLeft: "<font-weight=\"900\">Welcome back!", mainRight: "We hope you had a great time\nexploring our escape room.");
-                    }
-
-                    transform.SetPositionAndRotation(StorageManager.Instance.InitialPose.position, StorageManager.Instance.InitialPose.rotation);
-
-                    break;
-                case "THI":
-                    ShowHeader(mainLeft: "<font-weight=\"900\">Germany", mainRight: "Technische Hochschule\nIngolstadt - THI");
-                    break;
-                case "MUG":
-                    ShowHeader(mainLeft: "<font-weight=\"900\">Poland", mainRight: "Medical University\nof Gdańsk - MUG");
-                    break;
-                case "CUAS":
-                    ShowHeader(mainLeft: "<font-weight=\"900\">Austria", mainRight: "Carinthia University of\nApplied Sciences - CUAS");
-                    break;
-            }
         }
 
         void Update() {
@@ -116,6 +94,25 @@ namespace ACE2EU {
 
                 if (Cursor.lockState == CursorLockMode.Locked) {
                     ProcessLook();
+                }
+
+                if (_home.activeInHierarchy) {
+
+                    if (_home.transform.GetChild(0).gameObject.activeInHierarchy) {
+
+                        if (Input.GetKeyDown(KeyCode.Y)) {
+                            FindAnyObjectByType<Portal>().Teleport();
+                        }
+
+                        if (Input.GetKeyDown(KeyCode.N)) {
+                            _home.transform.GetChild(0).gameObject.SetActive(false);
+                        }
+
+                    } else {
+                        if (Input.GetKeyDown(KeyCode.H)){
+                            _home.transform.GetChild(0).gameObject.SetActive(true);
+                        }
+                    }
                 }
 
 
@@ -258,7 +255,6 @@ namespace ACE2EU {
         private bool rightTouchActive = false;
 
         void HandleTouchInput() {
-
 
             // Reset tracking at start of frame
             if (Input.touchCount == 0) {
@@ -435,15 +431,13 @@ namespace ACE2EU {
             }
         }
 
-        //private void OnTriggerExit(Collider other) {
+        public void FadeIn() {
+            StartCoroutine(FadeRoutine(false));
+        }
 
-        //    if (!_fade) {
-        //        return;
-        //    }
-
-        //    StopAllCoroutines();
-        //    StartCoroutine(FadeRoutine(false));
-        //}
+        public void FadeOut(Action afterFade = null) {
+            StartCoroutine(FadeRoutine(true, afterFade: afterFade ));
+        }
 
         private IEnumerator FadeRoutine(bool fadeOut = true, float duration = 1f, float delay = 0f, Action afterFade = null) {
 
@@ -520,5 +514,11 @@ namespace ACE2EU {
             CanMove = false;
         }
         private bool _bubbleActive = false;
+
+        public void ShowHome(bool visible) {
+
+            _home.SetActive(visible);
+            _home.transform.GetChild(0).gameObject.SetActive(false);
+        }
     }
 }
