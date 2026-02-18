@@ -15,8 +15,7 @@ namespace ACE2EU {
 
         [Header("Events")]
         [SerializeField]
-        public UnityEvent OnPortalIsLoading
-            = null;
+        public UnityEvent OnPortalIsLoading = null;
         [SerializeField]
         public UnityEvent OnPortalIsActive = null;
 
@@ -28,7 +27,7 @@ namespace ACE2EU {
 
             OverAllManager.Instance.OnSceneGetsLoaded += scene => {
                 if (_scene == scene) {
-                    OnPortalIsActive?.Invoke();
+                    OnPortalIsLoading?.Invoke();
                 }
             };
 

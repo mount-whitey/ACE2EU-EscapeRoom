@@ -100,8 +100,8 @@ namespace ACE2EU {
 
                     if (_home.transform.GetChild(0).gameObject.activeInHierarchy) {
 
-                        if (Input.GetKeyDown(KeyCode.Y)) {
-                            FindAnyObjectByType<Portal>().Teleport();
+                        if (Input.GetKeyDown(KeyCode.Y) || Input.GetKeyDown(KeyCode.Z)) {
+                            FindAnyObjectByType<Portal>(FindObjectsInactive.Include).Teleport();
                         }
 
                         if (Input.GetKeyDown(KeyCode.N)) {
