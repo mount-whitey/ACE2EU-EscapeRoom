@@ -10,7 +10,9 @@ namespace ACE2EU {
         BASE = 0,
         MUG = 1,
         THI = 2,
-        CUAS = 3
+        CUAS = 3,
+        UFV = 4,
+        UCB = 5
     }
 
     public class OverAllManager: MonoBehaviour {
@@ -146,6 +148,12 @@ namespace ACE2EU {
                     break;
                 case Scene.CUAS:
                     PlayerController.Instance.ShowHeader(mainLeft: "<font-weight=\"900\">Austria", mainRight: "Carinthia University of\nApplied Sciences - CUAS");
+                    break;
+                case Scene.UFV:
+                    PlayerController.Instance.ShowHeader(mainLeft: "<font-weight=\"900\">Spain", mainRight: "Universidad Francisco\nde Vitoria - UFV");
+                    break;
+                case Scene.UCB:
+                    PlayerController.Instance.ShowHeader(mainLeft: "<font-weight=\"900\">Romania", mainRight: "University Constantin\nBrâncuşi - UCB");
                     break;
             }
 

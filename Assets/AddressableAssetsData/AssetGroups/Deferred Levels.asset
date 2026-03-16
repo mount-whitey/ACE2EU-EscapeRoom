@@ -13,8 +13,6 @@ MonoBehaviour:
   m_Name: Deferred Levels
   m_EditorClassIdentifier: 
   m_GroupName: Deferred Levels
-  m_Data:
-    m_SerializedData: []
   m_GUID: 221d165c3b5bf1046800378578c17ec8
   m_SerializeEntries:
   - m_GUID: 06508cfb4f9005e4b9411ad17472b81a
@@ -29,6 +27,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - CUAS
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 679149f10d4d3a644879b4ecdb92f150
+    m_Address: UFV
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UFV
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 751aad5c76e461545a26557874c2a7b9
     m_Address: MUG
     m_ReadOnly: 0
@@ -40,6 +44,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - BASE
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de3cb715904a19f44b8c310c3aa00c87
+    m_Address: UCB
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UCB
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: e55ab8f47da3e39429443df2e8cdeb4a, type: 2}
