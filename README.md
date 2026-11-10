@@ -1,4 +1,4 @@
-This is the repository for the ACE2EU escape room.
+This is the repository for the ACE²-EU escape room.
 
 Add students to this repository and allow them to create new/ updated scenes of the unique universities escape rooms. The main branch is set to undeletable/ un-overwriteable, only pull requests are allowed, so students don't break anything!
 
